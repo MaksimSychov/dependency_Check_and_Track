@@ -1,0 +1,30 @@
+name: Security Scan
+
+on: [pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+    
+    - name: Generate SBOM
+      run: mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom
+    
+    - name: Check dependencies
+      run: mvn org.owasp:dependency-check-maven:check
+    
+    - name: Save reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          target/bom.xml
+          target/dependency-check/
+        retention-days: 7
